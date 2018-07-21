@@ -1,7 +1,7 @@
 ## Introduction
 
 This assignment uses data from the
-[UC Irvine Machine Learning Repository]("http://archive.ics.uci.edu/ml/")
+[UC Irvine Machine Learning Repository](http://archive.ics.uci.edu/ml/)
 a popular repository for machine learning datasets. 
 
 Its "Individual household electric power consumption" data set has been 
@@ -55,7 +55,7 @@ the data** so that the plot can be fully reproduced. You should also
 include the code that creates the PNG file.
 
 The four plots that you will need to construct are shown below.  
-*On the left side are the reference plots. On the right side are the generated plots*
+*On the top are the reference plots. On the bottom are the generated plots*
 
 ### Plot 1
 
