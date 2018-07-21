@@ -20,12 +20,12 @@ SCC <- readRDS(sccfile)
 
 mergeddata <- merge(
     NEI[, c("SCC", "Emissions", "year")], 
-    SCC[, c("SCC", "Short.Name")], 
+    SCC[, c("SCC", "EI.Sector")], 
     by.x="SCC", by.y="SCC", all=TRUE)
 
 p4data <- subset(
     mergeddata, 
-    grepl("Coal", mergeddata$Short.Name, fixed=TRUE), 
+    grepl("Coal", mergeddata$EI.Sector, fixed=TRUE), 
     c("Emissions", "year"))
 
 p4data <- group_by(p4data, year)
