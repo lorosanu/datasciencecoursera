@@ -1,6 +1,6 @@
 # Assignments for the Data Science course on Coursera
 
-The [data science](https://www.coursera.org/specializations/jhu-data-science#about) specialization on is a ten-course introduction to data science, developed and taught by leading professors at the Johns Hopkins University.
+The [data science](https://www.coursera.org/specializations/jhu-data-science#about) specialization is a ten-course introduction to data science, developed and taught by leading professors at the Johns Hopkins University.
 
 ## About this specialization
 
