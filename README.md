@@ -15,3 +15,4 @@ This Specialization covers the concepts and tools needed throughout the entire d
 * [R Programming](course2/)
 * [Getting and cleaning data](course3/)
 * [Exploratory Data Analysis](course4/)
+* [Reproducible Research](course5/)
