@@ -14,11 +14,10 @@ as well as estimates of any fatalities, injuries, and property damage.
 ## Data
 
 The data for this assignment is stored in a CSV file
-compressed via the bzip2 algorithm to reduce its size.
-You can download the file from the [course web site](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2).
+compressed via the bzip2 algorithm to reduce its size.  
+The archive can be downloaded from the [course web site](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2).
 
-There is also some documentation of the database available.
-Here you will find how some of the variables are constructed/defined.
+There is also some documentation of the database available:
 * National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
 * National Climatic Data Center Storm Events [FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
 
@@ -48,5 +47,5 @@ Requirements
 
 ## Proposed solution
 
-The generated Markdown report for this assignment can be found [here](RR_second_assignment.md).
+The generated Markdown report for this assignment can be found [here](RR_second_assignment.md).  
 The html RPubs report can be found [here](http://rpubs.com/lorosanu/rr-assignment-2).
