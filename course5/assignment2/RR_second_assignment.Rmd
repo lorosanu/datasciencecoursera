@@ -1,0 +1,293 @@
+---
+output: 
+  html_document:
+    keep_md: true
+---
+
+# Health and economic impact of weather events
+
+## Introduction
+
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities.
+Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+
+This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database.
+This database tracks characteristics of major storms and weather events in the United States,
+including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+## Synopsis
+
+The goal of this analysis is to identify the health and economic impact of weather events.
+
+Two data processing steps are necessary for this analysis:
+* cleaning the event names
+* reconstructing the complete values of property damage and crop damage.
+
+The analysis reveals that the most dangerous event for the population health are the tornados, causing 37% of the fatalities.
+They are followed by the event of excessive heat which is causing 13% of fatalities.
+
+The analysis also reveals that the event causing the greatest economic consequences are the flash floods, generating 75% of the damage costs.
+They are followed by the event of thunderstorm winds which is generating 23% of expenses.
+
+The most severe weather event with respect to crop damage is the drought.
+It generates 28% of the damage costs.
+
+## Details of the analysis
+
+### Data description
+
+The data is presented under the format of a csv file compressed via the bzip2 algorithm.
+The achive can be downloaded from the [course](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) web site.
+
+The documentation is available at:
+* National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
+* National Climatic Data Center Storm Events [FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
+
+The events in the database start in the year 1950 and end in November 2011.
+In the earlier years of the database there are generally fewer events recorded,
+most likely due to a lack of good records.
+More recent years should be considered more complete.
+
+### Goal of analysis
+
+The goal is to explore the NOAA Storm Database and answer some basic questions about severe weather events:
+* across the United States, which types of events are most harmful with respect to population health?
+* across the United States, which types of events have the greatest economic consequences?
+
+### Data processing
+
+* download the archive and read the data
+
+```{r}
+url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+archive <- "StormData.csv.bz2"
+
+if ( !file.exists(archive)){
+    download.file(url, archive)
+}
+
+data <- read.csv(bzfile(archive), header=TRUE)
+```
+
+* inspect the data
+
+```{r}
+str(data)
+```
+
+* select only the variables that are useful for the analysis
+    * event type
+    * population health: fatalities and injuries
+    * economic consequences: property damage and crop damage
+    
+```{r}
+data <- data[, c(8, 23, 24, 25, 26, 27, 28)]
+str(data)
+```
+
+* clean the event names
+    * upercase the name of events
+    * replace all punctuation marks with spaces
+    * trim leading and trailing whitespaces
+
+```{r}
+events <- toupper(data$EVTYPE)
+events <- gsub("[[:punct:]]", " ", events)
+events <- gsub("^[[:space:]]+|[[:space:]]+$", "", events)
+print(paste(
+    "Passed from", length(unique(data$EVTYPE)), 
+    "to", length(unique(events)), "unique event names"))
+data$EVTYPE <- events
+```
+
+* reconstruct the property damage and crop damage values
+    * combine *PROPDMG* (floating value) and *PROPDMGEXP* (exponent) variables
+    * combine *CROPDMG* (floating value) and *CROPDMGEXP* (exponent) variables
+
+```{r}
+compose_value <- function(exp){
+    if (exp %in% c('h', 'H'))
+        return(10 ^ 2)
+    else if (exp %in% c('k', 'K'))
+        return(10 ^ 3)
+    else if (exp %in% c('m', 'M'))
+        return(10 ^ 6)
+    else if (exp %in% c('b', 'B'))
+        return(10 ^ 9)
+    else if (!is.na(as.numeric(exp)))
+        return(10 ^ as.numeric(exp))
+    else if (exp %in% c('', '-', '?', '+'))
+        return(1)
+    NA
+}
+
+data$PROPDMG <- data$PROPDMG * sapply(data$PROPDMGEXP, compose_value)
+data$CROPDMG <- data$CROPDMG * sapply(data$CROPDMGEXP, compose_value)
+data <- data[, c(1, 2, 3, 4, 6)]
+
+str(data)
+```
+
+### Explore the consequences of severe weather events
+
+* identify which types of events are most harmful with respect to population health?
+
+    * inspect the injuries counts with respect to the event types
+
+    ```{r}
+    hdata1 <- aggregate(INJURIES ~ EVTYPE, data, sum)
+    hdata1 <- hdata1[order(-hdata1$INJURIES),]
+    print("The top 10 events that caused the most number of injuries:")
+    head(hdata1, 10)
+    ```
+
+    * inspect the fatalities counts with respect to the event types
+
+    ```{r}
+    hdata2 <- aggregate(FATALITIES ~ EVTYPE, data, sum)
+    hdata2 <- hdata2[order(-hdata2$FATALITIES),]
+    print("The top 10 events that caused the most number of fatalities:")
+    head(hdata2, 10)
+    ```
+
+    * inspect percentages of most dangerous events
+
+    ```{r}
+    total_fatalities <- sum(hdata2$FATALITIES)
+
+    for (event in head(hdata2$EVTYPE, 3)){
+        n <- sum(hdata2[which(hdata2$EVTYPE == event), ]$FATALITIES)
+        p <- round(n / total_fatalities * 100, 2)
+        print(paste("The", event, "causes", p, "% of fatalities"))
+    }    
+    ```
+
+    * inspect the injuries and fatalities counts with a plot 
+
+    ```{r}
+    hdata1 <- head(hdata1, 10)
+    hdata2 <- head(hdata2, 10)
+    ```
+
+    ```{r population_health, fig.width=18, fig.height=6}
+    par(mfrow=c(1:2))
+    par(mar=c(4, 13, 2, 2))
+    options(scipen = 50) 
+
+    barplot(
+        hdata1$INJURIES, 
+        names.arg=hdata1$EVTYPE, 
+        horiz=TRUE,
+        las=1,
+        col="blue",
+        xlim=c(0, 100000),
+        xlab="Number of reported injuries",
+        ylab="Event Type\n\n\n\n\n\n\n\n",
+        main="Top 10 causes of injuries") 
+    barplot(
+        hdata2$FATALITIES, 
+        names.arg=hdata2$EVTYPE, 
+        horiz=TRUE,
+        las=1,
+        col="red", 
+        xlim=c(0, 6000),
+        xlab="Number of reported fatalities",
+        ylab="Event Type\n\n\n\n\n\n",
+        main="Top 10 causes of fatalities") 
+    ```
+
+
+* identify which types of events have the greatest economic consequences?
+
+    * inspect the property damage with respect to the event types
+
+    ```{r}
+    ecdata1 <- aggregate(PROPDMG ~ EVTYPE, data, sum)
+    ecdata1 <- ecdata1[order(-ecdata1$PROPDMG),]
+    print("The top 10 events that caused the greatest property damage:")
+    head(ecdata1, 10)
+    ```
+
+    * inspect the crop damage with respect to the event types
+
+    ```{r}
+    ecdata2 <- aggregate(CROPDMG ~ EVTYPE, data, sum)
+    ecdata2 <- ecdata2[order(-ecdata2$CROPDMG),]
+    print("The top 10 events that caused the greatest crop damage:")
+    head(ecdata2, 10)
+    ```
+
+    * inspect percentages of most property damaging events
+
+    ```{r}
+    total_expenses <- sum(ecdata1$PROPDMG)
+
+    for (event in head(ecdata1$EVTYPE, 3)){
+        n <- sum(ecdata1[which(ecdata1$EVTYPE == event), ]$PROPDMG)
+        p <- round(n / total_expenses * 100, 2)
+        print(paste("The", event, "causes", p, "% of expenses"))
+    }    
+    ```
+    
+    
+    * inspect percentages of most crop damaging events
+
+    ```{r}
+    total_expenses <- sum(ecdata2$CROPDMG)
+
+    for (event in head(ecdata2$EVTYPE, 3)){
+        n <- sum(ecdata2[which(ecdata2$EVTYPE == event), ]$CROPDMG)
+        p <- round(n / total_expenses * 100, 2)
+        print(paste("The", event, "causes", p, "% of expenses"))
+    }    
+    ```
+
+    * inspect the economic consequences with a plot 
+
+    ```{r}
+    ecdata1 <- head(ecdata1, 10)
+    ecdata2 <- head(ecdata2, 10)
+    ecdata1$PROPDMG <- ecdata1$PROPDMG / (10^9)
+    ecdata2$CROPDMG <- ecdata2$CROPDMG / (10^9)
+    ```
+
+    ```{r economic_consequences, fig.width=18, fig.height=6}
+    par(mfrow=c(1:2))
+    par(mar=c(4, 13, 2, 2))
+    options(scipen = 3) 
+
+    barplot(
+        ecdata1$PROPDMG, 
+        names.arg=ecdata1$EVTYPE, 
+        horiz=TRUE,
+        las=1,
+        col="blue",
+        xlim=c(0, 70000),
+        xlab="Expenses generated [billions of dollars]",
+        ylab="Event Type\n\n\n\n\n\n\n\n\n",
+        main="Top 10 causes of property damage")
+    
+    barplot(
+        ecdata2$CROPDMG, 
+        names.arg=ecdata2$EVTYPE, 
+        horiz=TRUE,
+        las=1,
+        col="red",
+        xlim=c(0, 14),
+        xlab="Expenses generated [billions of dollars]",
+        ylab="Event Type\n\n\n\n\n\n\n\n\n",
+        main="Top 10 causes of crop damage")
+    ```
+
+### Results
+
+The greatest number of deaths and injuries are caused by tornados,
+amounting to more than 5,000 deaths and to more than 90,000 injuries.
+Other dangerous event types include the excessive heat, floods and winds.
+
+The most property damages are caused by the flash floods and are estimated at 68 trillion dollars.
+The thunderstorm winds come in second place causing 20 trillion dollars worth of damages.
+
+The most severe weather event in terms of crop damage is the drought. 
+It has caused more than 13 billion dollars worth of damages.
+Other damaging events include the floods and the hails.
